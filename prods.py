@@ -1,8 +1,10 @@
 import requests
 import json 
 from bs4 import BeautifulSoup
+import pandas as pd
 baseurl ="https://www.corporategear.com"
 prod_urls=[]
+categories =[]
 cat_imgs=[]
 urls = ['https://www.corporategear.com/men-vests.html?v=product-list',
         'https://www.corporategear.com/men-quarter-zips-and-pullovers.html?sort=&v=product-list',
@@ -15,8 +17,9 @@ urls = ['https://www.corporategear.com/men-vests.html?v=product-list',
         'https://www.corporategear.com/accessories-office.html?v=product-list',
         'https://www.corporategear.com/accessories-golf-golf-bags.html?v=product-list',
         'https://www.corporategear.com/accessories-golf-golf-balls.html?v=product-list']
-categories =[]
+
 ids =['13839','13851','13850','13840','13841','13846','13921','13919','13868','13874']
+limit = [{"start":0,"end":180},{"start":180, "end":500}]
 for url in urls:
     categories.append(url.split('/')[3])
 for cats,url,i in zip(categories,urls,ids):
@@ -42,38 +45,38 @@ for cats,url,i in zip(categories,urls,ids):
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
         'x-requested-with': 'XMLHttpRequest',
     }
-
-    data = {
-        'newcatid': i,
-        'color': '',
-        'size': '',
-        'type': '',
-        'gender': '',
-        'price': '',
-        'brand': '',
-        'sortby': '',
-        'url': cats,
-        'startrow': '0',
-        'endrow': '180',
-    }
-
-    response = session.post('https://www.corporategear.com/Category/Getpaggingdata', cookies=cookies, headers=headers, data=data)
-#     if "strGrid" not in response.text:
-#         print(cats)
-#         print(response.text)
+    for li in limit:
         
-    data= response.json()
-    data= json.dumps(data)
-    data= json.loads(data)
-    n=1
-    
-    soup = BeautifulSoup(data['strGrid'],'lxml')
-    prods=soup.findAll('a', title=True)
-    cat_img= soup.findAll('figure',class_='pro1')
+        data = {
+            'newcatid': i,
+            'color': '',
+            'size': '',
+            'type': '',
+            'gender': '',
+            'price': '',
+            'brand': '',
+            'sortby': '',
+            'url': cats,
+            'startrow': li.get('start'),
+            'endrow': li.get('end'),
+        }
 
-    for p,img in zip(prods,cat_img):
-        prod_urls.append(baseurl+p.get('href'))
-        cat_imgs.append(img.get('data-images'))
-#         print(baseurl+p.get('href'))
-#         print(img.get('data-images'))
-        
+        response = session.post('https://www.corporategear.com/Category/Getpaggingdata', cookies=cookies, headers=headers, data=data)
+
+        data= response.json()
+        data= json.dumps(data)
+        data= json.loads(data)
+        soup = BeautifulSoup(data['strGrid'],'lxml')
+        prods=soup.findAll('a', title=True)
+        cat_img= soup.findAll('figure',class_='pro1')
+        for p,img in zip(prods,cat_img):
+            prod_urls.append(baseurl+p.get('href'))
+            cat_imgs.append(img.get('data-images'))
+            print(baseurl+p.get('href'))
+            print(img.get('data-images'))
+
+print(len(prod_urls))
+print(len(cat_imgs))
+data_dict = {"Product URL":prod_urls,"Catalog Image":cat_imgs}
+df= pd.DataFrame.from_dict(data_dict)
+df.to_csv("prods.csv",index=False)
