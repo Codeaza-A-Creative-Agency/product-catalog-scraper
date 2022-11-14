@@ -9,9 +9,10 @@ categories =[]
 for url in urls:
     print(url.split('/')[3])
     categories.append(url.split('/')[3])
-prods=[]
+prod_url=[]
 cat_imgs=[]
 for cats,url in zip(categories,urls):
+    imgs =[]
     cookies = {
         'ASP.NET_SessionId': 'gggaum2fiuxeejptjabbz1cv',
         'VisiterID': '986a0d87-4032-4983-87a2-a8663ed2bc17',
@@ -77,7 +78,7 @@ for cats,url in zip(categories,urls):
     prods=soup.findAll('a', title=True)
     cat_img= soup.findAll('figure',class_='pro1')
     for p,img in zip(prods,cat_img):
-        prods.append(baseurl+p.get('href'))
+        prod_url.append(baseurl+p.get('href'))
         cat_imgs.append(img.get('data-images'))
 print(len(prods))
 print(len(cat_imgs))
