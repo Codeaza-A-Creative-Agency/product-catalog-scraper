@@ -1,7 +1,7 @@
 import scrapy 
 from scrapy.crawler import CrawlerProcess
 import pandas as pd
-df= pd.read_csv('prod-1.csv')
+df= pd.read_csv('prods-1.csv')
 df=df['Product URL']
 
 class catalog_scraper(scrapy.Spider):
@@ -31,6 +31,14 @@ class catalog_scraper(scrapy.Spider):
         data_dict["SKU"]=''
         data_dict["Product Name"]= ''
         data_dict['Brand Name']=''
+        data_dict["Base Category"]=''
+        data_dict['Sub Category']='',
+        data_dict['Description']=''
+        data_dict['Catalog Preview Image']=''
+        data_dict['MRSP']=''
+        data_dict['Minimum Order Quantity']=''
+        data_dict['Sized']=''
+        data_dict['Gender']=''
         print(response.url)
    
         
