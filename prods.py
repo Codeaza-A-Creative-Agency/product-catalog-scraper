@@ -6,19 +6,21 @@ baseurl ="https://www.corporategear.com"
 prod_urls=[]
 categories =[]
 cat_imgs=[]
-urls = ['https://www.corporategear.com/men-vests.html?v=product-list',
-        'https://www.corporategear.com/men-quarter-zips-and-pullovers.html?sort=&v=product-list',
-        'https://www.corporategear.com/men-jackets.html?sort=&v=product-list',
-        'https://www.corporategear.com/women-vests.html?v=product-list'
-        'https://www.corporategear.com/women-jackets.html?v=product-list',
-        'https://www.corporategear.com/accessories-bags.html?v=product-list',
-        'https://www.corporategear.com/accessories-electronics.html?v=product-list',
-        'https://www.corporategear.com/accessories-drinkware.html?v=product-list',
-        'https://www.corporategear.com/accessories-office.html?v=product-list',
-        'https://www.corporategear.com/accessories-golf-golf-bags.html?v=product-list',
-        'https://www.corporategear.com/accessories-golf-golf-balls.html?v=product-list']
+# urls = ['https://www.corporategear.com/men-vests.html?v=product-list' #,
+urls=['https://www.corporategear.com/men-quarter-zips-and-pullovers.html?sort=&v=product-list']
+# 'https://www.corporategear.com/men-jackets.html?sort=&v=product-list',
+# 'https://www.corporategear.com/women-vests.html?v=product-list'
+# 'https://www.corporategear.com/women-jackets.html?v=product-list',
+# 'https://www.corporategear.com/accessories-bags.html?v=product-list',
+# 'https://www.corporategear.com/accessories-electronics.html?v=product-list',
+# 'https://www.corporategear.com/accessories-drinkware.html?v=product-list',
+# 'https://www.corporategear.com/accessories-office.html?v=product-list',
+# 'https://www.corporategear.com/accessories-golf-golf-bags.html?v=product-list',
+# 'https://www.corporategear.com/accessories-golf-golf-balls.html?v=product-list']
 
-ids =['13839','13851','13850','13840','13841','13846','13921','13919','13868','13874']
+# ids =['13839'] #,
+ids =['13851']
+# ,'13850','13840','13841','13846','13921','13919','13868','13874']
 limit = [{"start":0,"end":180},{"start":180, "end":500}]
 for url in urls:
     categories.append(url.split('/')[3])
@@ -78,4 +80,4 @@ print(len(prod_urls))
 print(len(cat_imgs))
 data_dict = {"Product URL":prod_urls}
 df= pd.DataFrame.from_dict(data_dict)
-df.to_csv("prods-1.csv",index=False)
+df.to_csv("Cat-1-prods-1.csv",index=False)
