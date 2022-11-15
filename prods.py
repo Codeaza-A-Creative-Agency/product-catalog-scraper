@@ -69,14 +69,13 @@ for cats,url,i in zip(categories,urls,ids):
         soup = BeautifulSoup(data['strGrid'],'lxml')
         prods=soup.findAll('a', title=True)
         cat_img= soup.findAll('figure',class_='pro1')
-        for p,img in zip(prods,cat_img):
+        for p in prods:
             prod_urls.append(baseurl+p.get('href'))
-            cat_imgs.append(img.get('data-images'))
+            # cat_imgs.append(img.get('data-images'))
             print(baseurl+p.get('href'))
-            print(img.get('data-images'))
 
 print(len(prod_urls))
 print(len(cat_imgs))
-data_dict = {"Product URL":prod_urls,"Catalog Image":cat_imgs}
+data_dict = {"Product URL":prod_urls}
 df= pd.DataFrame.from_dict(data_dict)
-df.to_csv("prods.csv",index=False)
+df.to_csv("prods-1.csv",index=False)
