@@ -4,13 +4,12 @@ import pandas as pd
 import re,json
 from bs4 import BeautifulSoup
 import os
-
-# df= pd.read_csv('prods-1.csv')
-df= pd.read_csv('urls.csv')
-df=df['Product URL'].tolist()
+for i in range(1,11):
+    df= pd.read_csv(f'Category-{i}-Urls.csv')
+    df=df['Product URL'].tolist()
 # df = set(df)
 # df= list(df)
-# df= df[0:50]
+df= df[0:50]
 # df = ["https://www.corporategear.com/eddie-bauer-men-s-fleece-vest.html?v=product-detail"]
 
 class catalog_scraper(scrapy.Spider):
@@ -20,7 +19,7 @@ class catalog_scraper(scrapy.Spider):
         'RETRY_TIMES': 10,
         # export as CSV format
         'FEED_FORMAT' : 'csv',
-        'FEED_URI' : 'all-data.csv'
+        # 'FEED_URI' : 'all-data.csv'
     #     "ROTATING_PROXY_LIST" : ["108.59.14.208:13040", "108.59.14.203:13040"],
     #             "DOWNLOADER_MIDDLEWARES" : {
     #             "rotating_proxies.middlewares.RotatingProxyMiddleware" : 610,
@@ -48,14 +47,19 @@ class catalog_scraper(scrapy.Spider):
             'x-requested-with': 'XMLHttpRequest',
         }
     def start_requests(self):
-        for url in df:
-            yield scrapy.Request(url=url, callback=self.parse)
+        
+        for i in range(1,11):
+            df= pd.read_csv(f'Category-{i}-Urls.csv')
+            df=df['Product URL'].tolist()
+            df= df[:10]
+            for url in df:
+                yield scrapy.Request(url=url, callback=self.parse, meta={'Cat_num':i})
     
     def parse(self,response):
-        msrp_price = response.css("div.label-msrp+div>h2::text")
+        msrp_price = response.css("div.label-msrp+div>h2::text").extract_first()
 
         source_script_data = response.xpath("//div[@class='container']//script[@type='application/ld+json']/text()").extract_first().strip()  
-        new_string = re.sub(r"\s+|\\"," ",source_script_data)
+        new_string = re.sub(r"\s+|\\","",source_script_data)
         new_string = new_string.replace('"{"@context','"}},{"@context')
         if not new_string.endswith("}}]"):
             new_string = new_string[:-1] + "}}]"
@@ -65,10 +69,13 @@ class catalog_scraper(scrapy.Spider):
         # all colors main data
         # unique_colors_data = {}     #{'colorname': {'@context':'....}}
         unique_colors_data = []
+        try:
+            desc2 =response.xpath("//div[@itemprop='description']//ul//text()").extract()
+            desc2 = ''.join(desc2)
+        except:
+            desc2= ''
         for data in json_parsed_data: 
             if data.get("color") not in unique_colors_data:
-                # add that
-                unique_colors_data.append(data.get("color"))
 
                 sku = data['sku']
                 name= data['name']
@@ -92,7 +99,7 @@ class catalog_scraper(scrapy.Spider):
                 data_dict['Brand Name']=brand
                 data_dict["Base Category"]=response.xpath("(//li[@class='breadcrumbsdiv']/a/text())[2]").extract_first()
                 data_dict['Sub Category']=response.xpath("(//li[@class='breadcrumbsdiv']/a/text())[3]").extract_first()
-                data_dict['Description']=desc,
+                data_dict['Description']=desc =response.xpath("//div[@itemprop='description']//p//text()").extract()[0]+ desc2
                 data_dict['Catalog Preview Image']=cat_img
                 data_dict['MRSP'] = msrp_price
                 data_dict['Minimum Order Quantity']=min_ord
@@ -107,8 +114,8 @@ class catalog_scraper(scrapy.Spider):
                 payload = f"mainimagename={cat_img.split('/')[-1]}&productID={data.get('inProductGroupWithID')}"
 
                 # yield data_dict
-                yield scrapy.Request(url="https://www.corporategear.com/Itempage/GetMoreImagePost",method="POST",headers = self.headers,body=str(payload),callback=self.parse_with_all_images,meta={"all_data" : data_dict})
-        print("COlors: ",unique_colors_data)
+                yield scrapy.Request(url="https://www.corporategear.com/Itempage/GetMoreImagePost",method="POST",headers = self.headers,body=str(payload),callback=self.parse_with_all_images,meta={"all_data" : data_dict, "Cat_num":response.meta['Cat_num']})
+        print("Colors: ",unique_colors_data)
     
     def parse_with_all_images(self,response):
         response_data = json.loads(response.text)
@@ -136,8 +143,9 @@ class catalog_scraper(scrapy.Spider):
 
         images_dataframe = pd.DataFrame(images_dict)
 
-        if os.path.exists(os.path.join(os.getcwd(),"Sample-Records-1.xlsx")):
+        if os.path.exists(os.path.join(os.getcwd(),f"Sample-Records-{response.meta['Cat_num']}.xlsx")):
             with pd.ExcelWriter("Sample-Records-1.xlsx",mode='a',if_sheet_exists='overlay',engine='openpyxl') as writer:
+                
                 startroww = writer.sheets['products'].max_row
                 products_dataframe.to_excel(writer,startrow=startroww,index=False,header=False,sheet_name="products")
                 
@@ -145,7 +153,7 @@ class catalog_scraper(scrapy.Spider):
                 images_dataframe.to_excel(writer,startrow=startroww,index=False,header=False,sheet_name="Colors")
 
         else:
-            with pd.ExcelWriter("Sample-Records-1.xlsx") as writer:
+            with pd.ExcelWriter(f"Sample-Records-{response.meta['Cat_num']}.xlsx") as writer:
                 products_dataframe.to_excel(writer,index=False,sheet_name="products")
                 images_dataframe.to_excel(writer,index=False,sheet_name="Colors")
 
