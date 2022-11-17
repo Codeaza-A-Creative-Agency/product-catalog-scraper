@@ -52,6 +52,7 @@ class catalog_scraper(scrapy.Spider):
             df= pd.read_csv(f'Category-{i}-Urls.csv')
             df=df['Product URL'].tolist()
             df= df[:10]
+            df = ["https://www.corporategear.com/eddie-bauer-men-s-fleece-vest.html?v=product-detail"]
             for url in df:
                 yield scrapy.Request(url=url, callback=self.parse, meta={'Cat_num':i})
     
@@ -64,7 +65,7 @@ class catalog_scraper(scrapy.Spider):
         if not new_string.endswith("}}]"):
             new_string = new_string[:-1] + "}}]"
         json_parsed_data = json.loads(new_string)
-        print(len(json_parsed_data))
+        
 
         # all colors main data
         # unique_colors_data = {}     #{'colorname': {'@context':'....}}
@@ -106,6 +107,7 @@ class catalog_scraper(scrapy.Spider):
                 data_dict['Sized']=response.css("h2#allSizes ::text").extract_first()
                 data_dict['Gender']=gender
                 data_dict['color'] = data.get("color")
+                print(data_dict)
                 
                 # payload = {
                 #     'mainimagename': cat_img.split("/")[-1],
@@ -122,7 +124,6 @@ class catalog_scraper(scrapy.Spider):
         soup = BeautifulSoup(response_data, 'html.parser')
 
         imgs = soup.findAll('img')
-        print(imgs)
         all_images = [image.get("src") for image in imgs]
 
         data = {
@@ -142,6 +143,7 @@ class catalog_scraper(scrapy.Spider):
             images_dict[f"image{i}"] = [j]
 
         images_dataframe = pd.DataFrame(images_dict)
+        print(images_dataframe)
 
         if os.path.exists(os.path.join(os.getcwd(),f"Sample-Records-{response.meta['Cat_num']}.xlsx")):
             with pd.ExcelWriter("Sample-Records-1.xlsx",mode='a',if_sheet_exists='overlay',engine='openpyxl') as writer:
